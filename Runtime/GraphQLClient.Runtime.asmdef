@@ -1,0 +1,15 @@
+{
+    "name": "GraphQLClient.Runtime",
+    "references": [
+        "GUID:4788b95ad28a527429a4967dd685001d"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

@@ -1,0 +1,17 @@
+{
+    "name": "GraphQLClient.Editor",
+    "references": [
+        "GUID:577c497bd6221234ea0d04cd5dc0cd56"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}
