@@ -28,6 +28,7 @@ namespace GraphQlClient.Core
         
         public Introspection.SchemaClass schemaClass;
 
+        [SerializeField]
         private string authMiddlewareGuid;
         public RequestAuthMiddleware AuthMiddleware
         {
