@@ -24,11 +24,19 @@ namespace GraphQlClient.Core
 
         public List<Query> subscriptions;
         
-        private string introspection;
+        public string introspection { get; private set; }
         
         public Introspection.SchemaClass schemaClass;
 
-        private string authToken;
+        private string authMiddlewareGuid;
+        public RequestAuthMiddleware AuthMiddleware
+        {
+            get => AssetDatabase.LoadAssetAtPath<RequestAuthMiddleware>(AssetDatabase.GUIDToAssetPath(authMiddlewareGuid));
+            set
+            {
+                authMiddlewareGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(value));
+            }
+        }
         
         private string queryEndpoint;
         private string mutationEndpoint;
@@ -38,9 +46,9 @@ namespace GraphQlClient.Core
 
         public bool loading;
 
-        public void SetAuthToken(string auth){
-            authToken = auth;
-        }
+        public bool HasAnyEndpoint => !string.IsNullOrEmpty(queryEndpoint) || !string.IsNullOrEmpty(mutationEndpoint) || !string.IsNullOrEmpty(subscriptionEndpoint);
+        public bool FailedIntrospecting => !string.IsNullOrEmpty(introspection) && !loading && !HasAnyEndpoint;
+
         public Query GetQueryByName(string queryName, Query.Type type){
             List<Query> querySearch;
             switch (type){
@@ -63,18 +71,22 @@ namespace GraphQlClient.Core
         public async Task<UnityWebRequest> Post(Query query){
             if (String.IsNullOrEmpty(query.query))
                 query.CompleteQuery();
-            return await HttpHandler.PostAsync(url, query.query, authToken);
+            return await HttpHandler.PostAsync(url, query.query, AuthMiddleware);
         }
 
         public async Task<UnityWebRequest> Post(string queryName, Query.Type type){
             Query query = GetQueryByName(queryName, type);
+            if (query == null)
+            {
+                Debug.LogErrorFormat("No query named {0}", queryName);
+            }
             return await Post(query);
         }
 
         public async Task<ClientWebSocket> Subscribe(Query query, string socketId = "1", string protocol = "graphql-ws"){
             if (String.IsNullOrEmpty(query.query))
                 query.CompleteQuery();
-            return await HttpHandler.WebsocketConnect(url, query.query, authToken, socketId, protocol);
+            return await HttpHandler.WebsocketConnect(url, query.query, AuthMiddleware, socketId, protocol);
         }
 
         public async Task<ClientWebSocket> Subscribe(string queryName, Query.Type type, string socketId = "1", string protocol = "graphql-ws"){
@@ -120,7 +132,9 @@ namespace GraphQlClient.Core
         //Todo: Put schema file in proper location
         public async void Introspect(){
             loading = true;
-            request = await HttpHandler.PostAsync(url, Introspection.schemaIntrospectionQuery, authToken);
+            introspection = "";
+            Debug.LogFormat("Requesting GraphQL Schema from {0} with auth: {1}", url, AuthMiddleware);
+            request = await HttpHandler.PostAsync(url, Introspection.schemaIntrospectionQuery, AuthMiddleware);
             EditorApplication.update += HandleIntrospection;
         }
 
@@ -130,13 +144,20 @@ namespace GraphQlClient.Core
             EditorApplication.update -= HandleIntrospection;
             introspection = request.downloadHandler.text;
             File.WriteAllText(Application.dataPath + $"\\{name}schema.txt",introspection);
-            schemaClass = JsonConvert.DeserializeObject<Introspection.SchemaClass>(introspection);
-            if (schemaClass.data.__schema.queryType != null)
-                queryEndpoint = schemaClass.data.__schema.queryType.name;
-            if (schemaClass.data.__schema.mutationType != null)
-                mutationEndpoint = schemaClass.data.__schema.mutationType.name;
-            if (schemaClass.data.__schema.subscriptionType != null)
-                subscriptionEndpoint = schemaClass.data.__schema.subscriptionType.name;
+            try
+            {
+                schemaClass = JsonConvert.DeserializeObject<Introspection.SchemaClass>(introspection);
+                if (schemaClass.data.__schema.queryType != null)
+                    queryEndpoint = schemaClass.data.__schema.queryType.name;
+                if (schemaClass.data.__schema.mutationType != null)
+                    mutationEndpoint = schemaClass.data.__schema.mutationType.name;
+                if (schemaClass.data.__schema.subscriptionType != null)
+                    subscriptionEndpoint = schemaClass.data.__schema.subscriptionType.name;
+            }
+            catch (Exception e)
+            {
+                Debug.LogErrorFormat("GraphQL introspection failed: {0}", e);
+            }
             loading = false;
         }
 

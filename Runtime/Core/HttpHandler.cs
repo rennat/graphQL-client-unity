@@ -15,15 +15,17 @@ namespace GraphQlClient.Core
 	{
 		
 		
-		public static async Task<UnityWebRequest> PostAsync(string url, string details, string authToken = null){
+		public static async Task<UnityWebRequest> PostAsync(string url, string details, RequestAuthMiddleware authMiddleware = null){
             string jsonData = JsonConvert.SerializeObject(new{query = details});
             byte[] postData = Encoding.ASCII.GetBytes(jsonData);
             UnityWebRequest request = UnityWebRequest.Post(url, UnityWebRequest.kHttpVerbPOST);
             request.uploadHandler = new UploadHandlerRaw(postData);
             request.SetRequestHeader("Content-Type", "application/json");
-            if (!String.IsNullOrEmpty(authToken)) 
-                request.SetRequestHeader("Authorization", "Bearer " + authToken);
-            
+            if (authMiddleware != null)
+            {
+                authMiddleware.Prepare(request);
+                Debug.LogFormat("Auth Header: {0}", request.GetRequestHeader("Authorization"));
+            }
             OnRequestBegin  requestBegin = new OnRequestBegin();
             requestBegin.FireEvent();
             
@@ -88,14 +90,14 @@ namespace GraphQlClient.Core
         #region Websocket
 
         //Use this to subscribe to a graphql endpoint
-		public static async Task<ClientWebSocket> WebsocketConnect(string subscriptionUrl, string details, string authToken = null, string socketId = "1", string protocol = "graphql-ws"){
+		public static async Task<ClientWebSocket> WebsocketConnect(string subscriptionUrl, string details, RequestAuthMiddleware authMiddleware = null, string socketId = "1", string protocol = "graphql-ws"){
 			string subUrl = subscriptionUrl.Replace("http", "ws");
 			string id = socketId;
 			ClientWebSocket cws = new ClientWebSocket();
 			cws.Options.AddSubProtocol(protocol);
-			if (!String.IsNullOrEmpty(authToken))
-				cws.Options.SetRequestHeader("Authorization", "Bearer " + authToken);
-			Uri u = new Uri(subUrl);
+            if (authMiddleware != null)
+                authMiddleware.Prepare(cws);
+            Uri u = new Uri(subUrl);
 			try{
 				await cws.ConnectAsync(u, CancellationToken.None);
 				if (cws.State == WebSocketState.Open)

@@ -14,52 +14,72 @@ namespace GraphQlClient.Editor
 
         public override void OnInspectorGUI(){
             GraphApi graph = (GraphApi) target;
+            serializedObject.Update();
             GUIStyle style = new GUIStyle{fontSize = 15, alignment = TextAnchor.MiddleCenter};
             EditorGUILayout.LabelField(graph.name, style);
             EditorGUILayout.Space();
-            graph.GetSchema();
+            try
+            {
+                graph.GetSchema();
+            }
+            catch(Exception e)
+            {
+                EditorGUILayout.HelpBox(string.Format("Failed to load Schema: {0}", e), MessageType.Error);
+            }
             if (GUILayout.Button("Reset")){
                 graph.DeleteAllQueries();
             }
 
             EditorGUILayout.Space();
             EditorGUILayout.Space();
+            graph.AuthMiddleware = (RequestAuthMiddleware)EditorGUILayout.ObjectField("Auth Token Provider", graph.AuthMiddleware, typeof(RequestAuthMiddleware), false);
             graph.url = EditorGUILayout.TextField("Url", graph.url);
             if (GUILayout.Button("Introspect")){
                 graph.Introspect();
             }
 
-            if (graph.loading){
+            if (graph.loading)
+            {
                 EditorGUILayout.LabelField("API is being introspected. Please wait...");
             }
-
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            if (graph.schemaClass == null){
-                return;
+            else if (graph.FailedIntrospecting)
+            {
+                EditorGUILayout.HelpBox("Failed Introspection", MessageType.Error);
+                EditorGUILayout.HelpBox(graph.introspection, MessageType.None, true);
             }
-            EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Create New Query")){
-                graph.CreateNewQuery();
+            else
+            {
+                EditorGUILayout.Space();
+                EditorGUILayout.Space();
+                if (graph.schemaClass == null)
+                {
+                    return;
+                }
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("Create New Query"))
+                {
+                    graph.CreateNewQuery();
+                }
+
+                if (GUILayout.Button("Create New Mutation"))
+                {
+                    graph.CreateNewMutation();
+                }
+
+                if (GUILayout.Button("Create New Subscription"))
+                {
+                    graph.CreateNewSubscription();
+                }
+
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.Space();
+                EditorGUILayout.Space();
+
+                DisplayFields(graph, graph.queries, "Query");
+                DisplayFields(graph, graph.mutations, "Mutation");
+                DisplayFields(graph, graph.subscriptions, "Subscription");
             }
-
-            if (GUILayout.Button("Create New Mutation")){
-                graph.CreateNewMutation();
-            }
-
-            if (GUILayout.Button("Create New Subscription")){
-                graph.CreateNewSubscription();
-            }
-
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-
-            DisplayFields(graph, graph.queries, "Query");
-            DisplayFields(graph, graph.mutations, "Mutation");
-            DisplayFields(graph, graph.subscriptions, "Subscription");
-
             EditorUtility.SetDirty(graph);
         }
 
