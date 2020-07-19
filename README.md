@@ -9,8 +9,11 @@ UnityWebRequest request = await exampleApi.Post("QueryName", GraphApi.Query.Type
 The client also utilizes different Events that can be subscribed to by any function. The Events are called when a request is completed, when data is gotten from a subscription and other useful cases.
 
 ## How to use
-### Import UnityPackage
-Download the [unitypackage](UnityPackages) file and import it into your Unity project.
+### Add the Package Dependency
+Add this line to your `Project_directory/Packages/manifest.json` file under the `dependencies` section:
+```
+    "com.tannern.graphql-client": "https://github.com/rennat/graphQL-client-unity.git",
+```
 
 ### Create an API Reference
 An API reference is a [Scriptable Object](https://docs.unity3d.com/Manual/class-ScriptableObject.html) that stores all the data relating to an API. For instance, if the API we intend to query is the [Pokemon GraphQl API](https://graphql-pokemon.now.sh/), within Unity, we would create an API Reference and point it to the url of the Pokemon GraphQl API. This API Reference will contain all the queries, mutations and subscriptions we wish to make pertaining to the Pokemon GraphQl API.
@@ -77,7 +80,8 @@ For the example above, the query expected an input in this form ``insert_users(o
 
 
 ### Authentication/Authorization
-For authentication and authorization, the API reference has a function called ``GraphApi.SetAuthToken(string auth)`` which sets the Authorization header of all request made with that API reference.
+GraphQlClient uses an auth middleware to prepare requests before sending them out. The `RequestAuthMiddleware` abstract base class is provided and should be used as the base class when creating the auth middleware for your project. In most cases this middleware should just add specific headers to the requests.
+An exmaple auth middleware, `AwsApiKeyAuthMiddleware`, is included for reference.
 
 ### Subscriptions
 A subscription is created the same way as a query or a mutation. The only difference is instead of  calling ``Post``, you call ``Subscribe``. The ``Subscribe`` functions does a lot of things under the hood like connecting websockets, observing the proper protocol and completing the handshake. While subscribed, you will continue to receive data from the server until you call ``CancelSubscription``. The ``Subscribe`` function can take in a couple of arguments.
