@@ -28,15 +28,10 @@ namespace GraphQlClient.Core
         
         public Introspection.SchemaClass schemaClass;
 
-        [SerializeField]
-        private string authMiddlewareGuid;
+        public string authMiddlewareResourcePath;
         public RequestAuthMiddleware AuthMiddleware
         {
-            get => AssetDatabase.LoadAssetAtPath<RequestAuthMiddleware>(AssetDatabase.GUIDToAssetPath(authMiddlewareGuid));
-            set
-            {
-                authMiddlewareGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(value));
-            }
+            get => Resources.Load<RequestAuthMiddleware>(authMiddlewareResourcePath);
         }
         
         private string queryEndpoint;

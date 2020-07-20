@@ -32,7 +32,7 @@ namespace GraphQlClient.Editor
 
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-            graph.AuthMiddleware = (RequestAuthMiddleware)EditorGUILayout.ObjectField("Auth Middleware", graph.AuthMiddleware, typeof(RequestAuthMiddleware), false);
+            graph.authMiddlewareResourcePath = EditorGUILayout.TextField("Auth Middleware Resource", graph.authMiddlewareResourcePath);
             graph.url = EditorGUILayout.TextField("Url", graph.url);
             if (GUILayout.Button("Introspect")){
                 graph.Introspect();
