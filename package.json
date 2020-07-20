@@ -1,13 +1,13 @@
 {
     "name": "com.tannern.graphql-client",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "displayName": "graphQL-client",
     "description": "A GraphQL client library",
     "unity": "2019.1",
     "repository": {
         "type": "git",
         "url": "git@github.com:rennat/graphQL-client-unity.git",
-        "revision": "0.1.0"
+        "revision": "0.1.1"
     },
     "dependencies": {
         "jillejr.newtonsoft.json-for-unity": "12.0.301"
